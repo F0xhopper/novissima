@@ -2,11 +2,13 @@ package config
 
 import (
 	"os"
-)
+
+	"github.com/joho/godotenv"
+)	
 
 type Config struct {
 	WhatsAppToken string
-	DatabaseURL   string
+	DatabaseURL   string	
 	// Add other configuration fields
 }
 

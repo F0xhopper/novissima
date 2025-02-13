@@ -1,13 +1,20 @@
 package database
 
+import (
+	"database/sql"
+
+	_ "github.com/lib/pq"
+)
+
 type Database interface {
 	Connect() error
 	Close() error
-	// Add other database operations
+	GetDB() *sql.DB
 }
 
 type PostgresDB struct {
 	connectionString string
+	db              *sql.DB
 }
 
 func NewPostgresDB(connectionString string) *PostgresDB {
@@ -17,11 +24,26 @@ func NewPostgresDB(connectionString string) *PostgresDB {
 }
 
 func (db *PostgresDB) Connect() error {
-	// Implement connection logic
+	conn, err := sql.Open("postgres", db.connectionString)
+	if err != nil {
+		return err
+	}
+	
+	if err := conn.Ping(); err != nil {
+		return err
+	}
+	
+	db.db = conn
 	return nil
 }
 
 func (db *PostgresDB) Close() error {
-	// Implement close logic
+	if db.db != nil {
+		return db.db.Close()
+	}
 	return nil
+}
+
+func (db *PostgresDB) GetDB() *sql.DB {
+	return db.db
 } 
