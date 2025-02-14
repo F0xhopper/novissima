@@ -1,49 +1,54 @@
 package database
 
 import (
-	"database/sql"
+	"log"
 
-	_ "github.com/lib/pq"
+	"github.com/supabase-community/supabase-go"
 )
 
 type Database interface {
 	Connect() error
-	Close() error
-	GetDB() *sql.DB
+	GetClient() *supabase.Client
 }
 
-type PostgresDB struct {
-	connectionString string
-	db              *sql.DB
+type SupabaseDB struct {
+	url     string
+	key     string
+	email   string
+	password string
+	client  *supabase.Client
 }
 
-func NewPostgresDB(connectionString string) *PostgresDB {
-	return &PostgresDB{
-		connectionString: connectionString,
+func NewSupabaseDB(url, key, email, password string) *SupabaseDB {
+	return &SupabaseDB{
+		url: url,
+		key: key,
+		email: email,
+		password: password,
 	}
 }
 
-func (db *PostgresDB) Connect() error {
-	conn, err := sql.Open("postgres", db.connectionString)
+func (db *SupabaseDB) Connect() error {
+	client, err := supabase.NewClient(db.url, db.key, nil)
 	if err != nil {
 		return err
 	}
-	
-	if err := conn.Ping(); err != nil {
-		return err
+
+
+	if db.email == "" || db.password == "" {
+		log.Fatal("Missing authentication credentials in .env file")
 	}
-	
-	db.db = conn
+
+	// Authenticate user
+	_, err = client.Auth.SignInWithEmailPassword(db.email, db.password)
+	if err != nil {
+		log.Fatalf("Error signing in: %v", err)
+	}
+
+	db.client = client
 	return nil
 }
 
-func (db *PostgresDB) Close() error {
-	if db.db != nil {
-		return db.db.Close()
-	}
-	return nil
-}
-
-func (db *PostgresDB) GetDB() *sql.DB {
-	return db.db
+func (db *SupabaseDB) GetClient() *supabase.Client {
+	return db.client
 } 

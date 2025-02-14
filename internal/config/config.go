@@ -9,7 +9,10 @@ import (
 type Config struct {
 	WhatsAppToken string
 	DatabaseURL   string	
-	// Add other configuration fields
+	SupabaseURL   string
+	SupabaseKey   string
+	SupabaseEmail string
+	SupabasePassword string
 }
 
 func LoadConfig() (*Config, error) {
@@ -20,5 +23,9 @@ func LoadConfig() (*Config, error) {
 	return &Config{
 		WhatsAppToken: os.Getenv("WHATSAPP_TOKEN"),
 		DatabaseURL:   os.Getenv("DATABASE_URL"),
+		SupabaseURL:   os.Getenv("SUPABASE_URL"),
+		SupabaseKey:   os.Getenv("SUPABASE_KEY"),
+		SupabaseEmail: os.Getenv("SUPABASE_EMAIL"),
+		SupabasePassword: os.Getenv("SUPABASE_PASSWORD"),
 	}, nil
 } 

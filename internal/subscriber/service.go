@@ -1,57 +1,71 @@
 package subscriber
 
 import (
-	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
 	"time"
+
+	"github.com/supabase-community/supabase-go"
 )
 
 type Service struct {
-	db *sql.DB
+	client *supabase.Client
 }
 
 type Subscriber struct {
-	Email     string
+	Phone     int
 	Active    bool
 	CreatedAt time.Time
 }
 
-func NewService(db *sql.DB) *Service {
+func NewService(client *supabase.Client) *Service {
 	return &Service{
-		db: db,
+		client: client,
 	}
 }
 
-func (s *Service) AddSubscriber(email string) error {
-	query := `
-		INSERT INTO subscribers (email, active, created_at)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (email) DO UPDATE 
-		SET active = true, created_at = EXCLUDED.created_at
-	`
-	_, err := s.db.Exec(query, email, true, time.Now())
-	return err
+func (s *Service) AddSubscriber(phone int64) error {
+	subscriber := Subscriber{
+		Phone:     int(phone),
+		Active:    true,
+		CreatedAt: time.Now().UTC(), // Explicitly use UTC
+	}
+	
+	// Log the subscriber data being sent
+	data, _, err := s.client.From("subscribers").Insert(subscriber, true, "", "", "").Execute()
+	if err != nil {
+		// Log the raw error and data
+		log.Printf("Supabase error: %v", err)
+		if data != nil {
+			log.Printf("Supabase response: %s", string(data))
+		}
+		return fmt.Errorf("failed to add subscriber: %w", err)
+	}
+	
+	log.Printf("Successfully added subscriber with phone: %d", phone)
+	return nil
 }
 
 func (s *Service) GetAllActiveSubscribers() ([]Subscriber, error) {
-	query := `
-		SELECT email, active, created_at 
-		FROM subscribers 
-		WHERE active = true
-	`
-	
-	rows, err := s.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	var subscribers []Subscriber
-	for rows.Next() {
-		var sub Subscriber
-		if err := rows.Scan(&sub.Email, &sub.Active, &sub.CreatedAt); err != nil {
-			return nil, err
-		}
-		subscribers = append(subscribers, sub)
+	
+	data, _, err := s.client.From("subscribers").
+		Select("*", "", false).
+		Eq("active", "true").
+		Execute()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get active subscribers: %w", err)
 	}
-	return subscribers, rows.Err()
-} 
+
+	if err := json.Unmarshal(data, &subscribers); err != nil {
+		return nil, fmt.Errorf("failed to parse subscribers data: %w", err)
+	}
+
+	log.Printf("Found %d active subscribers:", len(subscribers))
+	for _, sub := range subscribers {
+		log.Printf("  - Phone: %d, Created: %s", sub.Phone, sub.CreatedAt.Format(time.RFC3339))
+	}
+	
+	return subscribers, nil
+}

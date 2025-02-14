@@ -17,14 +17,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
 	}
-	db := database.NewPostgresDB(cfg.DatabaseURL)
+	db := database.NewSupabaseDB(
+		cfg.SupabaseURL,
+		cfg.SupabaseKey,
+		cfg.SupabaseEmail,
+		cfg.SupabasePassword,
+	)
 	if err := db.Connect(); err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatal(err)
 	}
-	defer db.Close()
 
-	subscriberService := subscriber.NewService(db.GetDB())
-	contentService := content.NewService(subscriberService)
+
+	subscriberService := subscriber.NewService(db.GetClient())
+	contentService := content.NewService(subscriberService, db.GetClient())
 	
 	// Set up HTTP handlers
 	http.HandleFunc("/subscribers", subscriberService.HandleSubscribe)

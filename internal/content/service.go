@@ -3,15 +3,19 @@ package content
 import (
 	"log"
 	"novissima/internal/subscriber"
+
+	"github.com/supabase-community/supabase-go"
 )
 
 type Service struct {
 	subscriberService *subscriber.Service
+	client *supabase.Client
 }
 
-func NewService(subscriberService *subscriber.Service) *Service {
+func NewService(subscriberService *subscriber.Service, client *supabase.Client) *Service {
 	return &Service{
 		subscriberService: subscriberService,
+		client: client,
 	}
 }
 
@@ -24,7 +28,7 @@ func (s *Service) SendDailyMeditations() error {
 	for _, sub := range subscribers {
 		if err := s.sendMeditation(sub); err != nil {
 			// Log error but continue with other subscribers
-			log.Printf("Error sending meditation to %s: %v", sub.Email, err)
+			log.Printf("Error sending meditation to %d: %v", sub.Phone, err)
 		}
 	}
 	

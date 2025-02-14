@@ -12,7 +12,7 @@ func (s *Service) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Email string `json:"email"`
+		Phone int `json:"phone"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -20,7 +20,7 @@ func (s *Service) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.AddSubscriber(req.Email); err != nil {
+	if err := s.AddSubscriber(int64(req.Phone)); err != nil {
 		http.Error(w, "Failed to add subscriber", http.StatusInternalServerError)
 		return
 	}
