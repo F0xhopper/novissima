@@ -1,19 +1,18 @@
-package subscriber
+package content
 
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 )
 
-func (s *Service) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
+func (s *Service) HandleCreateContent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var req struct {
-		Phone int `json:"phone"`
+		ContentText string `json:"contentText"`
 	}
 	
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -21,12 +20,12 @@ func (s *Service) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subscriber, err := s.AddSubscriber(int64(req.Phone))
+	content, err := s.AddContent(req.ContentText)
 	if err != nil {
-		http.Error(w, "Failed to add subscriber", http.StatusInternalServerError)
+		http.Error(w, "Failed to add content", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode("Successfully added subscriber: " + strconv.Itoa(subscriber.Phone))
+	json.NewEncoder(w).Encode("Successfully added content: " + content.Content)
 } 

@@ -1,45 +1,48 @@
 package content
 
 import (
+	"fmt"
 	"log"
-	"novissima/internal/subscriber"
+	"time"
 
 	"github.com/supabase-community/supabase-go"
 )
 
+type Content struct {
+	Content string
+	CreatedAt time.Time
+}
+
 type Service struct {
-	subscriberService *subscriber.Service
 	client *supabase.Client
 }
 
-func NewService(subscriberService *subscriber.Service, client *supabase.Client) *Service {
+func NewService(client *supabase.Client) *Service {
 	return &Service{
-		subscriberService: subscriberService,
 		client: client,
 	}
 }
 
-func (s *Service) SendDailyMeditations() error {
-	subscribers, err := s.subscriberService.GetAllActiveSubscribers()
+func (s *Service) AddContent(contentText string) (Content, error) {
+	content := Content{
+		Content: contentText,
+		CreatedAt: time.Now().UTC(),
+	}
+
+	data, _, err := s.client.From("content").Insert(content, true, "", "", "").Execute()
 	if err != nil {
-		return err
-	}
-	
-	for _, sub := range subscribers {
-		if err := s.sendMeditation(sub); err != nil {
-			// Log error but continue with other subscribers
-			log.Printf("Error sending meditation to %d: %v", sub.Phone, err)
+		log.Printf("Supabase error: %v", err)
+		if data != nil {
+			log.Printf("Supabase response: %s", string(data))
 		}
+		return Content{}, fmt.Errorf("failed to add content: %w", err)
 	}
-	
-	return nil
+
+	log.Printf("Successfully added content: %s", data)
+
+	return content, nil
 }
 
-func (s *Service) sendMeditation(subscriber subscriber.Subscriber) error {
-	// Implement your meditation sending logic here
-	// This could involve:
-	// 1. Selecting a meditation from a database
-	// 2. Formatting the meditation message
-	// 3. Sending via email/SMS/etc.
+func (s *Service) GetDailyMeditation() error {	
 	return nil
-} 
+}

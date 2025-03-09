@@ -25,26 +25,24 @@ func NewService(client *supabase.Client) *Service {
 	}
 }
 
-func (s *Service) AddSubscriber(phone int64) error {
+func (s *Service) AddSubscriber(phone int64) (Subscriber, error) {
 	subscriber := Subscriber{
 		Phone:     int(phone),
 		Active:    true,
-		CreatedAt: time.Now().UTC(), // Explicitly use UTC
+		CreatedAt: time.Now().UTC(),
 	}
-	
-	// Log the subscriber data being sent
+
 	data, _, err := s.client.From("subscribers").Insert(subscriber, true, "", "", "").Execute()
 	if err != nil {
-		// Log the raw error and data
 		log.Printf("Supabase error: %v", err)
 		if data != nil {
 			log.Printf("Supabase response: %s", string(data))
 		}
-		return fmt.Errorf("failed to add subscriber: %w", err)
+		return Subscriber{}, fmt.Errorf("failed to add subscriber: %w", err)
 	}
 	
 	log.Printf("Successfully added subscriber with phone: %d", phone)
-	return nil
+	return subscriber, nil
 }
 
 func (s *Service) GetAllActiveSubscribers() ([]Subscriber, error) {

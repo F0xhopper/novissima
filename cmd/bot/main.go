@@ -6,6 +6,7 @@ import (
 	"novissima/internal/config"
 	"novissima/internal/content"
 	"novissima/internal/database"
+	"novissima/internal/messaging"
 	"novissima/internal/subscriber"
 
 	"github.com/robfig/cron/v3"
@@ -27,19 +28,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-
 	subscriberService := subscriber.NewService(db.GetClient())
-	contentService := content.NewService(subscriberService, db.GetClient())
-	
+	contentService := content.NewService(db.GetClient())
+	messagingService := messaging.NewService(subscriberService, contentService, db.GetClient())
+
 	// Set up HTTP handlers
 	http.HandleFunc("/subscribers", subscriberService.HandleSubscribe)
-	
+	http.HandleFunc("/content", contentService.HandleCreateContent)
 	// Initialize cron job
 	c := cron.New()
 	
 	// Schedule meditation sending every day at 8:00 AM
 	_, err = c.AddFunc("0 8 * * *", func() {
-		if err := contentService.SendDailyMeditations(); err != nil {
+		if err := messagingService.SendDailyMeditations(); err != nil {
 			log.Printf("Error sending content: %v", err)
 		}
 	})
