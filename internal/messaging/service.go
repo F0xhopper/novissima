@@ -3,42 +3,42 @@ package messaging
 import (
 	"log"
 	"novissima/internal/content"
-	"novissima/internal/subscriber"
+	"novissima/internal/users"
 
 	"github.com/supabase-community/supabase-go"
 )
 
 type Service struct {
-	subscriberService *subscriber.Service
+	userService *users.Service
 	contentService *content.Service
 	client *supabase.Client
 }
 
-func NewService(subscriberService *subscriber.Service, contentService *content.Service, client *supabase.Client) *Service {
+func NewService(userService *users.Service, contentService *content.Service, client *supabase.Client) *Service {
 	return &Service{
-		subscriberService: subscriberService,
+		userService: userService,
 		contentService: contentService,
 		client: client,
 	}
 }
 
-func (s *Service) SendDailyMeditations() error {
-	subscribers, err := s.subscriberService.GetAllActiveSubscribers()
+func (s *Service) SendDailyContent() error {
+	users, err := s.userService.GetAllActiveUsers()
 	if err != nil {
 		return err
 	}
 	
-	for _, sub := range subscribers {
-		if err := s.sendMeditation(sub); err != nil {
-			// Log error but continue with other subscribers
-			log.Printf("Error sending meditation to %d: %v", sub.Phone, err)
+	for _, user := range users {
+		if err := s.sendContent(user); err != nil {
+			// Log error but continue with other users
+			log.Printf("Error sending meditation to %d: %v", user.Phone, err)
 		}
 	}
 	
 	return nil
 }
 
-func (s *Service) sendMeditation(sub subscriber.Subscriber) error {
+func (s *Service) sendContent(user users.User) error {
 	// meditation, err := s.contentService.GetDailyMeditation()
 	// if err != nil {
 	// 	return err

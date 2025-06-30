@@ -1,4 +1,4 @@
-package subscriber
+package users
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (s *Service) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
+func (s *Service) HandleAddUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -21,12 +21,12 @@ func (s *Service) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subscriber, err := s.AddSubscriber(int64(req.Phone))
+	user, err := s.AddUser(int64(req.Phone))
 	if err != nil {
-		http.Error(w, "Failed to add subscriber", http.StatusInternalServerError)
+		http.Error(w, "Failed to add user", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode("Successfully added subscriber: " + strconv.Itoa(subscriber.Phone))
+	json.NewEncoder(w).Encode("Successfully added user: " + strconv.Itoa(user.Phone))
 } 

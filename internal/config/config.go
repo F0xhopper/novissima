@@ -13,13 +13,13 @@ type Config struct {
 	SupabaseKey   string
 	SupabaseEmail string
 	SupabasePassword string
+	SupabaseStorageName string
 }
 
 func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, err
 	}
-
 	return &Config{
 		WhatsAppToken: os.Getenv("WHATSAPP_TOKEN"),
 		DatabaseURL:   os.Getenv("DATABASE_URL"),
@@ -27,5 +27,6 @@ func LoadConfig() (*Config, error) {
 		SupabaseKey:   os.Getenv("SUPABASE_KEY"),
 		SupabaseEmail: os.Getenv("SUPABASE_EMAIL"),
 		SupabasePassword: os.Getenv("SUPABASE_PASSWORD"),
+		SupabaseStorageName: os.Getenv("SUPABASE_STORAGE_NAME"),
 	}, nil
 } 
