@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -14,12 +15,12 @@ type Service struct {
 }
 
 type User struct {
-	ID        int64  
-	Phone     int       
-	Active    bool      
-	Language  string    
-	UpdatedAt time.Time 
-	CreatedAt time.Time 
+	ID        uuid.UUID  `json:"id"`
+	PhoneNumber  string  `json:"phone_number"`
+	Active    bool       `json:"active"`
+	Language  string     `json:"language"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 func NewService(client *supabase.Client) *Service {
@@ -28,12 +29,11 @@ func NewService(client *supabase.Client) *Service {
 	}
 }
 
-func (s *Service) AddUser(phone int64) (User, error) {
+func (s *Service) AddUser(phone string) (User, error) {
 	user := User{
-		Phone:     int(phone),
+		PhoneNumber:     phone,
 		Active:    true,
 		Language:  "en",
-		CreatedAt: time.Now().UTC(),
 	}
 
 	data, _, err := s.client.From("users").Insert(user, true, "", "", "").Execute()
@@ -45,7 +45,7 @@ func (s *Service) AddUser(phone int64) (User, error) {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
 	
-	log.Printf("Successfully added user with phone: %d", phone)
+	log.Printf("Successfully added user with phone: %s", phone)
 	return user, nil
 }
 
@@ -66,7 +66,7 @@ func (s *Service) GetAllActiveUsers() ([]User, error) {
 
 	log.Printf("Found %d active users:", len(users))
 	for _, user := range users {
-		log.Printf("  - Phone: %d, Created: %s", user.Phone, user.CreatedAt.Format(time.RFC3339))
+		log.Printf("  - Phone: %s, Created: %s", user.PhoneNumber, user.CreatedAt.Format(time.RFC3339))
 	}
 	
 	return users, nil

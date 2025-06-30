@@ -9,18 +9,20 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
 
 type Content struct {
-	TextEnglish string
-	TextLatin string
-	ImageURL string
-	LastSent *time.Time
-	Theme string
-	Source *string
-	UpdatedAt time.Time
-	CreatedAt time.Time
+	ID          uuid.UUID  `json:"id"`
+	TextEnglish string     `json:"text_english"`
+	TextLatin   string     `json:"text_latin"`
+	ImageURL    string     `json:"image_url"`
+	LastSent    *time.Time `json:"last_sent"`
+	Theme       string     `json:"theme"`
+	Source      *string    `json:"source"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	CreatedAt   time.Time  `json:"created_at"`
 }
 
 type Service struct {
@@ -64,8 +66,6 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 		LastSent:    nil,
 		Theme:       theme,
 		Source:      &source,
-		CreatedAt:   time.Now().UTC(),
-		UpdatedAt:   time.Now().UTC(),
 	}
 
 	data, _, err := s.client.From("content").Insert(content, true, "", "", "").Execute()

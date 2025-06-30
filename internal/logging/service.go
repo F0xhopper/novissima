@@ -8,11 +8,10 @@ import (
 )
 
 type LogEntry struct {
-	ID        int64    
-	EventType string    
-	Message   string    
-	Data      string    
-	CreatedAt time.Time 
+	EventType string     `json:"event_type"`
+	Message   string     `json:"message"`
+	Data      string     `json:"data"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 type Service struct {
