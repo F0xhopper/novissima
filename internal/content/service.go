@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"novissima/internal/logging"
+
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
@@ -27,12 +29,13 @@ type Content struct {
 
 type Service struct {
 	client *supabase.Client
-	
+	loggingService *logging.Service
 }
 
-func NewService(client *supabase.Client) *Service {
+func NewService(client *supabase.Client, loggingService *logging.Service) *Service {
 	return &Service{
 		client: client,
+		loggingService: loggingService,
 	}
 }
 
@@ -77,12 +80,18 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 		return Content{}, fmt.Errorf("failed to add content: %w", err)
 	}
 
+	s.loggingService.LogContentCreated(content.ID, content.TextEnglish, content.TextLatin, content.ImageURL, content.Theme, *content.Source)
 	log.Printf("Successfully added content: %s", data)
 
 	return content, nil
 }
 
 func (s *Service) GetDailyContent() error {	
+	
+	return nil
+}
+
+func (s *Service) SendDailyContent() error {
 	
 	return nil
 }

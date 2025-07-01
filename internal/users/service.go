@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"novissima/internal/logging"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,41 +13,62 @@ import (
 
 type Service struct {
 	client *supabase.Client
+	loggingService *logging.Service
 }
 
-type User struct {
-	ID        uuid.UUID  `json:"id"`
-	PhoneNumber  string  `json:"phone_number"`
-	Active    bool       `json:"active"`
-	Language  string     `json:"language"`
+// For insertion (no auto-generated fields)
+type UserCreate struct {
+	PhoneNumber string `json:"phone_number"`
+	Active      bool   `json:"active"`
+	Language    string `json:"language"`
+}
+
+// For updates (only fields that can change)
+type UserUpdate struct {
+	Active    *bool      `json:"active,omitempty"`
+	Language  *string    `json:"language,omitempty"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	CreatedAt time.Time  `json:"created_at"`
 }
 
-func NewService(client *supabase.Client) *Service {
+// For reading (complete entity)
+type User struct {
+	ID          uuid.UUID `json:"id"`
+	PhoneNumber string    `json:"phone_number"`
+	Active      bool      `json:"active"`
+	Language    string    `json:"language"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+func NewService(client *supabase.Client, loggingService *logging.Service) *Service {
 	return &Service{
 		client: client,
+		loggingService: loggingService,
 	}
 }
 
-func (s *Service) AddUser(phone string) (User, error) {
-	user := User{
-		PhoneNumber:     phone,
-		Active:    true,
-		Language:  "en",
-	}
+func (s *Service) AddUser(phoneNumber string) (User, error) {
+	user := UserCreate{
+		PhoneNumber:  phoneNumber,
+		Active:       true,
+		Language:     "en",
+		}
 
+	
 	data, _, err := s.client.From("users").Insert(user, true, "", "", "").Execute()
 	if err != nil {
 		log.Printf("Supabase error: %v", err)
-		if data != nil {
-			log.Printf("Supabase response: %s", string(data))
-		}
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
+
+	var createdUser User
+	if err := json.Unmarshal(data, &createdUser); err != nil {
+		return User{}, fmt.Errorf("failed to parse created user: %w", err)
+	}
 	
-	log.Printf("Successfully added user with phone: %s", phone)
-	return user, nil
+	s.loggingService.LogUserCreated(createdUser.ID, createdUser.PhoneNumber)
+	log.Printf("Successfully added user with phone: %s", phoneNumber)
+	return createdUser, nil
 }
 
 func (s *Service) GetAllActiveUsers() ([]User, error) {
@@ -70,4 +92,22 @@ func (s *Service) GetAllActiveUsers() ([]User, error) {
 	}
 	
 	return users, nil
+}
+
+func (s *Service) GetUserByPhoneNumber(phoneNumber string) (User, error) {
+	var user User
+	
+	data, _, err := s.client.From("users").
+		Select("*", "", false).
+		Eq("phone_number", phoneNumber).
+		Execute()
+	if err != nil {
+		return User{}, fmt.Errorf("failed to get user by phone number: %w", err)
+	}
+
+	if err := json.Unmarshal(data, &user); err != nil {
+		return User{}, fmt.Errorf("failed to parse user data: %w", err)
+	}
+	
+	return user, nil
 }

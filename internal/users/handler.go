@@ -3,7 +3,6 @@ package users
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 )
 
 func (s *Service) HandleAddUser(w http.ResponseWriter, r *http.Request) {
@@ -13,7 +12,7 @@ func (s *Service) HandleAddUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Phone int `json:"phone"`
+		PhoneNumber string	 `json:"phone_number"`
 	}
 	
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -21,12 +20,12 @@ func (s *Service) HandleAddUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.AddUser(int64(req.Phone))
+	user, err := s.AddUser(req.PhoneNumber)
 	if err != nil {
 		http.Error(w, "Failed to add user", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode("Successfully added user: " + strconv.Itoa(user.Phone))
+	json.NewEncoder(w).Encode(user)
 } 

@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
 
 type LogEntry struct {
+	ID        uuid.UUID  `json:"id"`
 	EventType string     `json:"event_type"`
 	Message   string     `json:"message"`
 	Data      string     `json:"data"`
@@ -41,30 +43,41 @@ func (s *Service) LogEvent(eventType, message string, data map[string]interface{
 	return err
 }
 
-func (s *Service) LogContentSent(contentID int64, message string) error {
-	return s.LogEvent("content_sent", message, map[string]interface{}{
+func (s *Service) LogContentCreated(contentID uuid.UUID, textEnglish string, textLatin string, imageURL string, theme string, source string) error {
+	return s.LogEvent("content_created", "New content created", map[string]interface{}{
+		"content_id": contentID,
+		"text_english": textEnglish,
+		"text_latin": textLatin,
+		"image_url": imageURL,
+		"theme": theme,
+		"source": source,
+	})
+}
+
+func (s *Service) LogContentSent(contentID uuid.UUID) error {
+	return s.LogEvent("content_sent", "Content sent", map[string]interface{}{
 		"content_id": contentID,
 	})
 }
 
-func (s *Service) LogUserCreated(userID int64, username string) error {
+func (s *Service) LogUserCreated(userID uuid.UUID, phoneNumber string) error {
 	return s.LogEvent("user_created", "New user created", map[string]interface{}{
 		"user_id":  userID,
-		"username": username,
+		"phone_number": phoneNumber,
 	})
 }
 
-func (s *Service) LogUserDeactivated(userID int64) error {
+func (s *Service) LogUserDeactivated(userID uuid.UUID) error {
 	return s.LogEvent("user_deactivated", "User deactivated", map[string]interface{}{
 		"user_id": userID,
 	})
 }
-func (s *Service) LogUserActivated(userID int64) error {
+func (s *Service) LogUserActivated(userID uuid.UUID) error {
 	return s.LogEvent("user_activated", "User activated", map[string]interface{}{
 		"user_id": userID,
 	})
 }
-func (s *Service) LogUserLanguageChanged(userID int64, language string) error {
+func (s *Service) LogUserLanguageChanged(userID uuid.UUID, language string) error {
 	return s.LogEvent("user_language_changed", "User language changed", map[string]interface{}{
 		"user_id":  userID,
 		"language": language,

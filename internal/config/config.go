@@ -14,6 +14,9 @@ type Config struct {
 	SupabaseEmail string
 	SupabasePassword string
 	SupabaseStorageName string
+	TwilioAccountSid string
+	TwilioAuthToken  string
+	TwilioPhoneNumber string
 }
 
 func LoadConfig() (*Config, error) {
@@ -28,5 +31,8 @@ func LoadConfig() (*Config, error) {
 		SupabaseEmail: os.Getenv("SUPABASE_EMAIL"),
 		SupabasePassword: os.Getenv("SUPABASE_PASSWORD"),
 		SupabaseStorageName: os.Getenv("SUPABASE_STORAGE_NAME"),
+		TwilioAccountSid: os.Getenv("TWILIO_ACCOUNT_SID"),
+		TwilioAuthToken:  os.Getenv("TWILIO_AUTH_TOKEN"),
+		TwilioPhoneNumber: os.Getenv("TWILIO_PHONE_NUMBER"),
 	}, nil
 } 
