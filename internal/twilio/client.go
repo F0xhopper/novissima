@@ -1,24 +1,20 @@
 package twilio
 
 import (
-	"novissima/internal/content"
-	"novissima/internal/users"
-
-	"github.com/twilio/twilio-go/client"
+	"github.com/twilio/twilio-go"
 )
 
-type Service struct {
-	userService    *users.Service
-	contentService *content.Service
-	validator      client.RequestValidator
-	phoneNumber    string
+type Client struct {
+	twilioClient *twilio.RestClient
+	phoneNumber  string
 }
 
-func NewService(userService *users.Service, contentService *content.Service, authToken, phoneNumber string) *Service {
-	return &Service{
-		userService:    userService,
-		contentService: contentService,
-		validator:      client.NewRequestValidator(authToken),
-		phoneNumber:    phoneNumber,
+func NewClient(accountSid, authToken, phoneNumber string) *Client {
+	return &Client{
+		twilioClient: twilio.NewRestClientWithParams(twilio.ClientParams{
+			Username: accountSid,
+			Password: authToken,
+		}),
+		phoneNumber: phoneNumber,
 	}
 }

@@ -16,21 +16,18 @@ type Service struct {
 	loggingService *logging.Service
 }
 
-// For insertion (no auto-generated fields)
 type UserCreate struct {
 	PhoneNumber string `json:"phone_number"`
 	Active      bool   `json:"active"`
 	Language    string `json:"language"`
 }
 
-// For updates (only fields that can change)
 type UserUpdate struct {
 	Active    *bool      `json:"active,omitempty"`
 	Language  *string    `json:"language,omitempty"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
-// For reading (complete entity)
 type User struct {
 	ID          uuid.UUID `json:"id"`
 	PhoneNumber string    `json:"phone_number"`
@@ -52,7 +49,7 @@ func (s *Service) AddUser(phoneNumber string) (User, error) {
 		PhoneNumber:  phoneNumber,
 		Active:       true,
 		Language:     "en",
-		}
+	}
 
 	
 	data, _, err := s.client.From("users").Insert(user, true, "", "", "").Execute()
@@ -61,11 +58,16 @@ func (s *Service) AddUser(phoneNumber string) (User, error) {
 		return User{}, fmt.Errorf("failed to add user: %w", err)
 	}
 
-	var createdUser User
-	if err := json.Unmarshal(data, &createdUser); err != nil {
+	var createdUsers []User
+	if err := json.Unmarshal(data, &createdUsers); err != nil {
 		return User{}, fmt.Errorf("failed to parse created user: %w", err)
 	}
 	
+	if len(createdUsers) == 0 {
+		return User{}, fmt.Errorf("no user was created")
+	}
+	
+	createdUser := createdUsers[0]
 	s.loggingService.LogUserCreated(createdUser.ID, createdUser.PhoneNumber)
 	log.Printf("Successfully added user with phone: %s", phoneNumber)
 	return createdUser, nil
@@ -111,3 +113,19 @@ func (s *Service) GetUserByPhoneNumber(phoneNumber string) (User, error) {
 	
 	return user, nil
 }
+
+func (s *Service) UpdateUserStatus(phoneNumber string, status string) error {
+	_, _, err := s.client.From("users").
+		Update(map[string]interface{}{"active": status}, "", "").
+		Eq("phone_number", phoneNumber).
+		Execute()
+	return err
+}		
+
+func (s *Service) UpdateUserLanguage(phoneNumber string, language string) error {
+	_, _, err := s.client.From("users").
+		Update(map[string]interface{}{"language": language}, "", "").
+		Eq("phone_number", phoneNumber).
+		Execute()
+	return err
+}		

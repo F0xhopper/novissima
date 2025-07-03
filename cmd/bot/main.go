@@ -32,14 +32,19 @@ func	 main() {
 	
 	loggingService := logging.NewService(db.GetClient())
 	userService := users.NewService(db.GetClient(), loggingService)
-	contentService := content.NewService(db.GetClient(), loggingService)
-	schedulerService := scheduler.NewService(contentService)
+	contentService := content.NewService(
+		db.GetClient(), 
+		loggingService,
+		cfg.ContentBucketName,
+	)
 	twilioService := twilio.NewService(
 		userService,
-		contentService,
+		cfg.TwilioAccountSid,
 		cfg.TwilioAuthToken,
 		cfg.TwilioPhoneNumber,
 	)
+	schedulerService := scheduler.NewService(contentService, twilioService, loggingService)
+	
 
 	http.HandleFunc("/users", userService.HandleAddUser)
 	http.HandleFunc("/content", contentService.HandleCreateContent)

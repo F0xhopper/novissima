@@ -6,7 +6,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/supabase-community/supabase-go v0.0.4
-	github.com/twilio/twilio-go v1.19.0
+	github.com/twilio/twilio-go v1.26.3
 )
 
 require (

@@ -49,8 +49,8 @@ func (s *Service) HandleCreateContent(w http.ResponseWriter, r *http.Request) {
 
 		defer file.Close()
 		
-		if header.Size > 10<<20 {
-			http.Error(w, "Image file too large (max 10MB)", http.StatusBadRequest)
+		if header.Size > 5<<20 {
+			http.Error(w, "Image file too large (max 5MB)", http.StatusBadRequest)
 			return
 		}
 
@@ -73,18 +73,3 @@ func (s *Service) HandleCreateContent(w http.ResponseWriter, r *http.Request) {
 		"imageURL": content.ImageURL,
 	})
 }
-func isValidImageType(contentType string) bool {
-	validTypes := []string{
-		"image/jpeg",
-		"image/jpg", 
-		"image/png",
-		"image/gif",
-	}
-	
-	for _, validType := range validTypes {
-		if contentType == validType {
-			return true
-		}
-	}
-	return false
-} 

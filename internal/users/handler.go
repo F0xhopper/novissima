@@ -2,6 +2,7 @@ package users
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -22,6 +23,7 @@ func (s *Service) HandleAddUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := s.AddUser(req.PhoneNumber)
 	if err != nil {
+		log.Printf("Failed to add user: %v", err)
 		http.Error(w, "Failed to add user", http.StatusInternalServerError)
 		return
 	}

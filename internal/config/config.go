@@ -17,6 +17,7 @@ type Config struct {
 	TwilioAccountSid string
 	TwilioAuthToken  string
 	TwilioPhoneNumber string
+	ContentBucketName string
 }
 
 func LoadConfig() (*Config, error) {
@@ -34,5 +35,6 @@ func LoadConfig() (*Config, error) {
 		TwilioAccountSid: os.Getenv("TWILIO_ACCOUNT_SID"),
 		TwilioAuthToken:  os.Getenv("TWILIO_AUTH_TOKEN"),
 		TwilioPhoneNumber: os.Getenv("TWILIO_PHONE_NUMBER"),
+		ContentBucketName: os.Getenv("CONTENT_BUCKET_NAME"),
 	}, nil
 } 
