@@ -46,7 +46,6 @@ func	 main() {
 	schedulerService := scheduler.NewService(contentService, twilioService, loggingService)
 	
 
-	http.HandleFunc("/users", userService.HandleAddUser)
 	http.HandleFunc("/content", contentService.HandleCreateContent)
 	http.HandleFunc("/twilio/webhook", twilioService.HandleWebhook)
 	
