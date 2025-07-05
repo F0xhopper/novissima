@@ -53,9 +53,13 @@ func (s *Service) formatContentMessage(content *content.Content, language string
 	case "en":
 		formattedContent = content.TextEnglish
 	case "la":
-		formattedContent = content.TextLatin
+		formattedContent = *content.TextLatin
 	case "both":
-		formattedContent = content.TextLatin + "\n\n" + "---" + "\n\n" + content.TextEnglish
+		if content.TextLatin == nil {
+			formattedContent = content.TextEnglish
+		} else {
+			formattedContent = *content.TextLatin + "\n\n" + "---" + "\n\n" + content.TextEnglish
+		}
 	default:
 		formattedContent = content.TextEnglish
 	}
@@ -77,12 +81,22 @@ func (s *Service) SendMessageToAllUsers(content *content.Content) error {
 	}
 
 	for _, user := range users {
+
+		if user.Language == "la" && content.TextLatin == nil {
+			continue
+		}
+
 		messageToSend := s.formatContentMessage(content, user.Language)
 		
-		if err := s.SendMessageToUser(user.PhoneNumber, messageToSend, content.ImageURL); err != nil {
+		if err := s.SendMessageToUser(user.PhoneNumber, messageToSend, *content.ImageURL); err != nil {
 			log.Printf("Error sending message to user %s: %v", user.PhoneNumber, err)
 			continue
 		}
+	}
+
+	err = s.contentService.UpdateLastSent(content.ID)
+	if err != nil {
+		log.Printf("Error updating last sent for content %s: %v", content.ID, err)
 	}
 	
 	return nil

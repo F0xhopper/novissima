@@ -12,8 +12,26 @@ import (
 	"novissima/internal/users"
 )
 
-func	 main() {
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin == "http://localhost:3000" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+		}
 
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
@@ -46,14 +64,15 @@ func	 main() {
 	)
 	schedulerService := scheduler.NewService(contentService, twilioService, loggingService)
 	
-
-	http.HandleFunc("/content", contentService.HandleCreateContent)
-	http.HandleFunc("/twilio/webhook", twilioService.HandleWebhook)
+	mux := http.NewServeMux()
+	
+	mux.HandleFunc("/content", contentService.HandleCreateContent)
+	mux.HandleFunc("/twilio/webhook", twilioService.HandleWebhook)
 	
 	schedulerService.Start()
 	
 	log.Println("Server starting on port 8080...")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", corsMiddleware(mux)); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

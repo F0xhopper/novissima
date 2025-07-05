@@ -69,7 +69,6 @@ func (s *Service) HandleCreateContent(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "Successfully added content: " + content.TextLatin,
-		"imageURL": content.ImageURL,
+		"message": "Successfully added content: " + content.TextEnglish,
 	})
 }

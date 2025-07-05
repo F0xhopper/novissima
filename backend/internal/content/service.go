@@ -19,14 +19,23 @@ import (
 type Content struct {
 	ID          uuid.UUID  `json:"id"`
 	TextEnglish string     `json:"text_english"`
-	TextLatin   string     `json:"text_latin"`
-	ImageURL    string     `json:"image_url"`
+	TextLatin   *string     `json:"text_latin"`
+	ImageURL    *string     `json:"image_url"`
 	LastSent    *time.Time `json:"last_sent"`
 	Theme       string     `json:"theme"`
 	ImageSource      *string    `json:"image_source"`
 	TextSource      *string    `json:"text_source"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	CreatedAt   time.Time  `json:"created_at"`
+}
+
+type ContentCreate struct {
+	TextEnglish string     `json:"text_english"`
+	TextLatin   *string     `json:"text_latin"`
+	ImageURL    *string     `json:"image_url"`
+	Theme       string     `json:"theme"`	
+	ImageSource      *string    `json:"image_source"`
+	TextSource      *string    `json:"text_source"`
 }
 
 type Service struct {
@@ -50,7 +59,7 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 		defer file.Close()
 		
 		ext := filepath.Ext(header.Filename)
-		filename := fmt.Sprintf("content/%d%s", time.Now().UnixNano(), ext)
+		filename := fmt.Sprintf("%s%s", theme, ext)
 		
 		fileBytes, err := io.ReadAll(file)
 		if err != nil {
@@ -62,15 +71,13 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 		if err != nil {
 			return Content{}, fmt.Errorf("failed to upload to storage: %w", err)
 		}
-
 		imageURL = s.dbClient.Storage.GetPublicUrl(bucketName, filename).SignedURL
 	}
 
-	content := Content{
+	content := ContentCreate{
 		TextEnglish: contentEnglish,
-		TextLatin:   contentLatin,
-		ImageURL:    imageURL,
-		LastSent:    nil,
+		TextLatin:   &contentLatin,
+		ImageURL:    &imageURL,
 		Theme:       theme,
 		ImageSource: &imageSource,
 		TextSource: &textSource,
@@ -85,10 +92,9 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 		return Content{}, fmt.Errorf("failed to add content: %w", err)
 	}
 
-	s.loggingService.LogContentCreated(content.ID, content.TextEnglish, content.TextLatin, content.ImageURL, content.Theme, *content.ImageSource, *content.TextSource)
 	log.Printf("Successfully added content: %s", data)
 
-	return content, nil
+	return Content{}, nil
 }
 
 func (s *Service) GetDailyContent() (*Content, error) {
@@ -126,6 +132,13 @@ func (s *Service) GetDailyContent() (*Content, error) {
 	return &contents[0], nil
 }
 
+func (s *Service) UpdateLastSent(id uuid.UUID) error {
+	_, _, err := s.dbClient.From("content").Update(map[string]interface{}{
+		"last_sent": time.Now(),
+	}, "", "").Eq("id", id.String()).Execute()
+	return err
+}
+	
 func isValidImageType(contentType string) bool {
 	validTypes := []string{
 		"image/jpeg",

@@ -40,7 +40,6 @@ func (s *Service) Start() {
 			log.Printf("Failed to send daily content: %v", err)
 			return
 		}
-		s.loggingService.LogContentSent(content.ID)
 		log.Println("Daily content sent to all users successfully")
 	})
 	
