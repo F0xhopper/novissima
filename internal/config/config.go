@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -21,9 +22,12 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	if err := godotenv.Load(); err != nil {
-		return nil, err
-	}
+	
+	  if os.Getenv("ENV") != "production" {
+        if err := godotenv.Load(); err != nil {
+            log.Println("Warning: .env file not found, skipping...")
+        }
+    }
 	return &Config{
 		WhatsAppToken: os.Getenv("WHATSAPP_TOKEN"),
 		DatabaseURL:   os.Getenv("DATABASE_URL"),
