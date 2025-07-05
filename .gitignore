@@ -1,2 +1,4 @@
-.env
-.DS_Store
+backend/.env
+backend/.DS_Store
+frontend/.env
+frontend/.DS_Store

@@ -43,14 +43,15 @@ func (s *Service) LogEvent(eventType, message string, data map[string]interface{
 	return err
 }
 
-func (s *Service) LogContentCreated(contentID uuid.UUID, textEnglish string, textLatin string, imageURL string, theme string, source string) error {
+func (s *Service) LogContentCreated(contentID uuid.UUID, textEnglish string, textLatin string, imageURL string, theme string, imageSource string, textSource string) error {
 	return s.LogEvent("content_created", "New content created", map[string]interface{}{
 		"content_id": contentID,
 		"text_english": textEnglish,
 		"text_latin": textLatin,
 		"image_url": imageURL,
 		"theme": theme,
-		"source": source,
+		"image_source": imageSource,
+		"text_source": textSource,
 	})
 }
 

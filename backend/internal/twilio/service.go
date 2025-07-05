@@ -18,15 +18,17 @@ import (
 type Service struct {
 	client      *Client
 	userService *users.Service
+	contentService *content.Service
 	accountSid  string
 	authToken   string
 	phoneNumber string
 }
 
-func NewService(userService *users.Service, accountSid, authToken, phoneNumber string) *Service {
+func NewService(userService *users.Service, contentService *content.Service, accountSid, authToken, phoneNumber string) *Service {
 	return &Service{
 		client:      NewClient(accountSid, authToken, phoneNumber),
-		userService: userService,
+		userService: userService,	
+		contentService: contentService,
 		accountSid:  accountSid,
 		authToken:   authToken,
 		phoneNumber: phoneNumber,
@@ -44,6 +46,30 @@ func (s *Service) SendMessageToUser(phoneNumber, message string, mediaUrl string
 	return err
 }
 
+func (s *Service) formatContentMessage(content *content.Content, language string) string {
+	var formattedContent string
+
+	switch language {
+	case "en":
+		formattedContent = content.TextEnglish
+	case "la":
+		formattedContent = content.TextLatin
+	case "both":
+		formattedContent = content.TextLatin + "\n\n" + "---" + "\n\n" + content.TextEnglish
+	default:
+		formattedContent = content.TextEnglish
+	}
+
+	if content.ImageSource != nil {
+		formattedContent += "\n\n" + "---" + "\n\n" + "*" + *content.ImageSource + "*"
+	}
+	if content.TextSource != nil {
+		formattedContent += "\n\n" + "*" + *content.TextSource + "*"	
+	}
+
+	return formattedContent
+}
+
 func (s *Service) SendMessageToAllUsers(content *content.Content) error {
 	users, err := s.userService.GetAllActiveUsers()
 	if err != nil {
@@ -51,18 +77,7 @@ func (s *Service) SendMessageToAllUsers(content *content.Content) error {
 	}
 
 	for _, user := range users {
-		var messageToSend string
-		
-		switch user.Language {
-		case "en":
-			messageToSend = content.TextEnglish
-		case "la":
-			messageToSend = content.TextLatin
-		case "both":
-			messageToSend = content.TextLatin + "\n\n" + content.TextEnglish
-		default:
-			messageToSend = content.TextEnglish
-		}
+		messageToSend := s.formatContentMessage(content, user.Language)
 		
 		if err := s.SendMessageToUser(user.PhoneNumber, messageToSend, content.ImageURL); err != nil {
 			log.Printf("Error sending message to user %s: %v", user.PhoneNumber, err)
@@ -131,8 +146,6 @@ func (s *Service) processMessage(from, body string) string {
 		return s.getHelp()
 	case "lang":
 		return s.setLanguage(cleanNumber, parts)
-	case "source":
-		return s.getSource(cleanNumber)
 	case "status":
 		return s.getStatus(cleanNumber)
 	default:
@@ -182,16 +195,6 @@ func (s *Service) startSubscription(cleanNumber string) string {
 	return "Welcome back! Your daily content subscription has been reactivated. You'll receive updates daily."
 }
 
-func (s *Service) getSource(cleanNumber string) string {
-
-	if _, err := s.ensureUserExists(cleanNumber); err != nil {
-		return "Sorry, there was an error getting your source. Please try again later."
-	}
-
-	return "Your source is https://novissima.com"
-
-}
-
 func (s *Service) stopSubscription(cleanNumber string) string {
 	
 	user, err := s.ensureUserExists(cleanNumber)
@@ -218,7 +221,6 @@ func (s *Service) getHelp() string {
 • stop - Stop receiving daily content
 • help - Show this help message
 • lang [en|la|both] - Set language (English/Latin/Both)
-• source - Get the source of the image and text
 • status - Get the status of your subscription
 
 Example: "start" or "lang en" or "status"`

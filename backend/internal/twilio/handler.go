@@ -1,6 +1,7 @@
 package twilio
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -9,13 +10,14 @@ func (s *Service) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 	if !s.validateRequest(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
-	}
+	}  
 	
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
+	log.Println("Recieved webhook from Twilio:", r.FormValue("From"), r.FormValue("Body"), r.FormValue("MessageType") )
 	from := r.FormValue("From") 
 	body := r.FormValue("Body") 
 	messageType := r.FormValue("MessageType")

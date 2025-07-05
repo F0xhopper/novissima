@@ -21,8 +21,8 @@ func (s *Service) HandleCreateContent(w http.ResponseWriter, r *http.Request) {
 	textEnglish := strings.TrimSpace(r.FormValue("textEnglish"))
 	textLatin := strings.TrimSpace(r.FormValue("textLatin"))
 	theme := strings.TrimSpace(r.FormValue("theme"))
-	source := strings.TrimSpace(r.FormValue("source"))
-
+	imageSource := strings.TrimSpace(r.FormValue("imageSource"))
+	textSource := strings.TrimSpace(r.FormValue("textSource"))
 	if textEnglish == "" {
 		http.Error(w, "textEnglish is required", http.StatusBadRequest)
 		return
@@ -61,7 +61,7 @@ func (s *Service) HandleCreateContent(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	content, err := s.AddContent(textEnglish, textLatin, file, header, theme, source)
+	content, err := s.AddContent(textEnglish, textLatin, file, header, theme, imageSource, textSource)
 	if err != nil {
 		http.Error(w, "Failed to add content", http.StatusInternalServerError)
 		return

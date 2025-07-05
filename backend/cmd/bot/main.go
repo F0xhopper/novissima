@@ -39,6 +39,7 @@ func	 main() {
 	)
 	twilioService := twilio.NewService(
 		userService,
+		contentService,
 		cfg.TwilioAccountSid,
 		cfg.TwilioAuthToken,
 		cfg.TwilioPhoneNumber,
