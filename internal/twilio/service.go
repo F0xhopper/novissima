@@ -133,6 +133,8 @@ func (s *Service) processMessage(from, body string) string {
 		return s.setLanguage(cleanNumber, parts)
 	case "source":
 		return s.getSource(cleanNumber)
+	case "status":
+		return s.getStatus(cleanNumber)
 	default:
 		return "Unknown command. Text 'help' to see available commands."
 	}
@@ -152,21 +154,32 @@ func (s *Service) ensureUserExists(cleanNumber string) (*users.User, error) {
 }
 
 func (s *Service) startSubscription(cleanNumber string) string {
+	existingUser, err := s.userService.GetUserByPhoneNumber(cleanNumber)
 	
-	user, err := s.ensureUserExists(cleanNumber)
 	if err != nil {
-		return "Sorry, there was an error starting your subscription. Please try again later."
-	}
-	
-	if !user.Active {
+		_, err := s.userService.AddUser(cleanNumber)
+		if err != nil {
+			return "Sorry, there was an error starting your subscription. Please try again later."
+		}
+		
 		err = s.userService.UpdateUserStatus(cleanNumber, "active")
 		if err != nil {
 			return "Sorry, there was an error starting your subscription. Please try again later."
 		}
+		
+		return "Welcome to Novissima! Thank you for subscribing. You'll receive daily updates with Latin texts and their English translations."
 	}
 	
-	return "Your daily content subscription has been started! You'll receive updates daily."
+	if existingUser.Active {
+		return "Your daily content subscription is already active!"
+	}
 	
+	err = s.userService.UpdateUserStatus(cleanNumber, "active")
+	if err != nil {
+		return "Sorry, there was an error starting your subscription. Please try again later."
+	}
+	
+	return "Welcome back! Your daily content subscription has been reactivated. You'll receive updates daily."
 }
 
 func (s *Service) getSource(cleanNumber string) string {
@@ -183,14 +196,17 @@ func (s *Service) stopSubscription(cleanNumber string) string {
 	
 	user, err := s.ensureUserExists(cleanNumber)
 	if err != nil {
-		return "Sorry, there was an error starting your subscription. Please try again later."
+		return "Sorry, there was an error in starting your subscription. Please try again later."
 	}
 
-	if user.Active {
-		err = s.userService.UpdateUserStatus(cleanNumber, "inactive")
-		if err != nil {
-			return "Sorry, there was an error stopping your subscription. Please try again later."
-		}
+	
+	if !user.Active {
+		return "Your daily content subscription is already stopped."
+	}
+	
+	err = s.userService.UpdateUserStatus(cleanNumber, "inactive")
+	if err != nil {
+		return "Sorry, there was an error stopping your subscription. Please try again later."
 	}
 
 	return "Your daily content subscription has been stopped. Send 'start' to resume."
@@ -203,8 +219,24 @@ func (s *Service) getHelp() string {
 • help - Show this help message
 • lang [en|la|both] - Set language (English/Latin/Both)
 • source - Get the source of the image and text
+• status - Get the status of your subscription
 
-Example: "start" or "lang en"`
+Example: "start" or "lang en" or "status"`
+}
+
+func (s *Service) getStatus(cleanNumber string) string {
+	user, err := s.ensureUserExists(cleanNumber)
+	if err != nil {
+		return "Sorry, there was an error getting your subscription status. Please try again later."
+	}
+	selectedLanguage := user.Language
+	userStatus := "Active"
+	
+	if !user.Active {
+		userStatus = "Inactive"
+	}
+	
+	return fmt.Sprintf("Your subscription status is: %s and your language is set to: %s", userStatus, selectedLanguage)
 }
 
 func (s *Service) setLanguage(cleanNumber string, parts []string) string {
@@ -216,7 +248,7 @@ func (s *Service) setLanguage(cleanNumber string, parts []string) string {
 	
 	
 	if len(parts) < 2 {
-		return "Please specify a language. Usage: lang [en|la]"
+		return "Please specify a language. Usage: lang [en|la|both]"
 	}
 
 	language := strings.ToLower(parts[1])
@@ -249,12 +281,11 @@ func (s *Service) setLanguage(cleanNumber string, parts []string) string {
 		}
 		return "Language set to both."
 	default:
-		return "Invalid language. Please use 'en' for English or 'la' for Latin."
+		return "Invalid language. Please use 'en' for English or 'la' for Latin or 'both' for both."
 	}
 }
 
 func (s *Service) sendResponse(w http.ResponseWriter, message string) {
-	
 	twimlResponse := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Message>%s</Message>

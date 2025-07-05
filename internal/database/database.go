@@ -34,12 +34,10 @@ func (db *SupabaseDB) Connect() error {
 		return err
 	}
 
-
 	if db.email == "" || db.password == "" {
 		log.Fatal("Missing authentication credentials in .env file")
 	}
 
-	// Authenticate user
 	_, err = client.Auth.SignInWithEmailPassword(db.email, db.password)
 	if err != nil {
 		log.Fatalf("Error signing in: %v", err)

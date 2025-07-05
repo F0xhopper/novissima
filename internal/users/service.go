@@ -51,6 +51,10 @@ func (s *Service) AddUser(phoneNumber string) (User, error) {
 		Language:     "en",
 	}
 
+	existingUser, err := s.GetUserByPhoneNumber(phoneNumber)
+	if err == nil && existingUser.PhoneNumber != "" {
+		return existingUser, nil
+	}
 	
 	data, _, err := s.client.From("users").Insert(user, true, "", "", "").Execute()
 	if err != nil {
