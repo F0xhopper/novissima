@@ -28,11 +28,6 @@ func (s *Service) HandleCreateContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if textLatin == "" {
-		http.Error(w, "textLatin is required", http.StatusBadRequest)
-		return
-	}
-
 	if theme == "" {
 		http.Error(w, "theme is required", http.StatusBadRequest)
 		return

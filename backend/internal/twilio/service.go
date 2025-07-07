@@ -170,6 +170,7 @@ func (s *Service) processMessage(from, body string) string {
 func (s *Service) ensureUserExists(cleanNumber string) (*users.User, error) {
 	user, err := s.userService.GetUserByPhoneNumber(cleanNumber)
 	if err != nil {
+		log.Printf("Error getting user by phone number: %v", err)
 		user, err = s.userService.AddUser(cleanNumber)
 		if err != nil {
 			return nil, fmt.Errorf("failed to register user: %w", err)
@@ -189,7 +190,7 @@ func (s *Service) startSubscription(cleanNumber string) string {
 			return "Sorry, there was an error starting your subscription. Please try again later."
 		}
 		
-		err = s.userService.UpdateUserStatus(cleanNumber, "active")
+		err = s.userService.UpdateUserStatus(cleanNumber, true)
 		if err != nil {
 			return "Sorry, there was an error starting your subscription. Please try again later."
 		}
@@ -201,7 +202,7 @@ func (s *Service) startSubscription(cleanNumber string) string {
 		return "Your daily content subscription is already active!"
 	}
 	
-	err = s.userService.UpdateUserStatus(cleanNumber, "active")
+	err = s.userService.UpdateUserStatus(cleanNumber, true)
 	if err != nil {
 		return "Sorry, there was an error starting your subscription. Please try again later."
 	}
@@ -221,7 +222,7 @@ func (s *Service) stopSubscription(cleanNumber string) string {
 		return "Your daily content subscription is already stopped."
 	}
 	
-	err = s.userService.UpdateUserStatus(cleanNumber, "inactive")
+	err = s.userService.UpdateUserStatus(cleanNumber, false)
 	if err != nil {
 		return "Sorry, there was an error stopping your subscription. Please try again later."
 	}
@@ -252,7 +253,7 @@ func (s *Service) getStatus(cleanNumber string) string {
 		userStatus = "Inactive"
 	}
 	
-	return fmt.Sprintf("Your subscription status is: %s and your language is set to: %s", userStatus, selectedLanguage)
+	return fmt.Sprintf("Subs is: %s and your language is set to: %s", userStatus, selectedLanguage)
 }
 
 func (s *Service) setLanguage(cleanNumber string, parts []string) string {

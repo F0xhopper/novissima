@@ -68,14 +68,14 @@ export default function UploadPage() {
       if (response.ok) {
         const result = await response.json();
         toast.success(result.message);
-        setFormData({
-          textEnglish: "",
-          textLatin: "",
-          theme: "",
-          imageSource: "",
-          textSource: "",
-          image: null,
-        });
+        // setFormData({
+        //   textEnglish: "",
+        //   textLatin: "",
+        //   theme: "",
+        //   imageSource: "",
+        //   textSource: "",
+        //   image: null,
+        // });
       } else {
         const error = await response.text();
         toast.error(error);
@@ -113,7 +113,7 @@ export default function UploadPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="textLatin">Latin Text *</Label>
+                <Label htmlFor="textLatin">Latin Text</Label>
                 <Textarea
                   id="textLatin"
                   placeholder="Enter the Latin text..."
@@ -121,7 +121,6 @@ export default function UploadPage() {
                   onChange={(e) =>
                     handleInputChange("textLatin", e.target.value)
                   }
-                  required
                 />
               </div>
 
@@ -129,6 +128,7 @@ export default function UploadPage() {
                 <Label htmlFor="theme">Theme *</Label>
                 <Select
                   value={formData.theme}
+                  required
                   onValueChange={(value) => handleInputChange("theme", value)}
                 >
                   <SelectTrigger>

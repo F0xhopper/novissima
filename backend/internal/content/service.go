@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
-	"path/filepath"
 	"time"
 
 	"novissima/internal/logging"
@@ -58,20 +57,17 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 	if file != nil && header != nil {
 		defer file.Close()
 		
-		ext := filepath.Ext(header.Filename)
-		filename := fmt.Sprintf("%s%s", theme, ext)
-		
+		filename := fmt.Sprintf("%s/%s", theme, header.Filename)
 		fileBytes, err := io.ReadAll(file)
 		if err != nil {
 			return Content{}, fmt.Errorf("failed to read file: %w", err)
-		}
+}
 
-		bucketName := s.bucketName
-		_, err = s.dbClient.Storage.UploadFile(bucketName, filename, bytes.NewReader(fileBytes))
+		_, err = s.dbClient.Storage.UploadFile(s.bucketName, filename, bytes.NewReader(fileBytes))
 		if err != nil {
 			return Content{}, fmt.Errorf("failed to upload to storage: %w", err)
 		}
-		imageURL = s.dbClient.Storage.GetPublicUrl(bucketName, filename).SignedURL
+		imageURL = s.dbClient.Storage.GetPublicUrl(s.bucketName, filename).SignedURL
 	}
 
 	content := ContentCreate{

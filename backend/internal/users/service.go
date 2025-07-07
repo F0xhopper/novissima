@@ -101,7 +101,7 @@ func (s *Service) GetAllActiveUsers() ([]User, error) {
 }
 
 func (s *Service) GetUserByPhoneNumber(phoneNumber string) (User, error) {
-	var user User
+	var users []User
 	
 	data, _, err := s.client.From("users").
 		Select("*", "", false).
@@ -111,14 +111,18 @@ func (s *Service) GetUserByPhoneNumber(phoneNumber string) (User, error) {
 		return User{}, fmt.Errorf("failed to get user by phone number: %w", err)
 	}
 
-	if err := json.Unmarshal(data, &user); err != nil {
+	if err := json.Unmarshal(data, &users); err != nil {
 		return User{}, fmt.Errorf("failed to parse user data: %w", err)
 	}
-	
-	return user, nil
+
+	if len(users) == 0 {
+		return User{}, fmt.Errorf("user not found")
+	}
+
+	return users[0], nil
 }
 
-func (s *Service) UpdateUserStatus(phoneNumber string, status string) error {
+func (s *Service) UpdateUserStatus(phoneNumber string, status bool) error {
 	_, _, err := s.client.From("users").
 		Update(map[string]interface{}{"active": status}, "", "").
 		Eq("phone_number", phoneNumber).
