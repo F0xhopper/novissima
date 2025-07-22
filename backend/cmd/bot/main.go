@@ -33,6 +33,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 func main() {
 	cfg, err := config.LoadConfig()
+	
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
 	}

@@ -26,7 +26,7 @@ func NewService(contentService *content.Service, twilioService *twilio.Service, 
 func (s *Service) Start() {
 	c := cron.New()
 	
-	c.AddFunc("0 8 * * *", func() {
+	c.AddFunc("*/2 * * * *", func() {
 		log.Println("Starting daily content distribution...")
 		
 		content, err := s.contentService.GetDailyContent()
@@ -37,7 +37,7 @@ func (s *Service) Start() {
 		
 		err = s.twilioService.SendMessageToAllUsers(content)
 		if err != nil {
-			log.Printf("Failed to send daily content: %v", err)
+			log.Printf("Failed to send daidly content: %v", err)
 			return
 		}
 		log.Println("Daily content sent to all users successfully")

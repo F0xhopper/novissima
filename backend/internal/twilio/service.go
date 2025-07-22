@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -39,10 +40,23 @@ func (s *Service) SendMessageToUser(phoneNumber, message string, mediaUrl string
 	params := &twilioApi.CreateMessageParams{}
 	params.SetTo("whatsapp:" + phoneNumber)
 	params.SetFrom("whatsapp:" + s.client.phoneNumber)
-	params.SetBody(message)
-	params.SetMediaUrl([]string{mediaUrl})
+	params.SetContentSid("HXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	
+	contentVariables := map[string]string{
+		"1": message,
+		"2": mediaUrl,
+		}
+	
+	variablesJSON, _ := json.Marshal(contentVariables)
+	params.SetContentVariables(string(variablesJSON))
 
-	_, err := s.client.twilioClient.Api.CreateMessage(params)
+	twilioMessage, err := s.client.twilioClient.Api.CreateMessage(params)
+	if err != nil {
+		return err
+	}
+	jsonMsg, _ := json.MarshalIndent(twilioMessage, "", "  ")
+	log.Printf("Twilio message: %s", jsonMsg)
+
 	return err
 }
 

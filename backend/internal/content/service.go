@@ -7,11 +7,13 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"strings"
 	"time"
 
 	"novissima/internal/logging"
 
 	"github.com/google/uuid"
+	storage_go "github.com/supabase-community/storage-go"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -57,13 +59,39 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 	if file != nil && header != nil {
 		defer file.Close()
 		
-		filename := fmt.Sprintf("%s/%s", theme, header.Filename)
+			fileExt := ""
+		if idx := strings.LastIndex(header.Filename, "."); idx != -1 {
+			fileExt = header.Filename[idx:]
+		}
+		filename := fmt.Sprintf("%s/%s%s", theme, uuid.New().String(), fileExt)
+		
 		fileBytes, err := io.ReadAll(file)
 		if err != nil {
 			return Content{}, fmt.Errorf("failed to read file: %w", err)
-}
+		}
 
-		_, err = s.dbClient.Storage.UploadFile(s.bucketName, filename, bytes.NewReader(fileBytes))
+		
+		fileReader := bytes.NewReader(fileBytes)
+		
+		
+		contentType := header.Header.Get("Content-Type")
+		if contentType == "" {
+			switch fileExt {
+			case ".jpg", ".jpeg":
+				contentType = "image/jpeg"
+			case ".png":
+				contentType = "image/png"
+			case ".gif":
+				contentType = "image/gif"
+			default:
+				contentType = "application/octet-stream"
+			}
+		}
+		
+		fileOptions := storage_go.FileOptions{
+			ContentType: &contentType,
+		}
+		_, err = s.dbClient.Storage.UploadFile(s.bucketName, filename, fileReader, fileOptions)
 		if err != nil {
 			return Content{}, fmt.Errorf("failed to upload to storage: %w", err)
 		}
@@ -94,7 +122,7 @@ func (s *Service) AddContent(contentEnglish string, contentLatin string, file mu
 }
 
 func (s *Service) GetDailyContent() (*Content, error) {
-	themes := []string{"heaven", "hell", "judgment", "death"}
+	themes := []string{ "death"}
 	startDate := time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC)
 	
 	now := time.Now()
@@ -103,13 +131,11 @@ func (s *Service) GetDailyContent() (*Content, error) {
 
 	currentTheme := themes[cycleDay]
 	
-	thirtyDaysAgo := now.AddDate(0, 0, -30)
+	// thirtyDaysAgo := now.AddDate(0, 0, -30)
 	
 	content, _, err := s.dbClient.From("content").
 		Select("*", "", false).
 		Eq("theme", currentTheme).
-		Or("last_sent.is.null", "").
-		Or("last_sent.lt."+thirtyDaysAgo.Format("2006-01-02"), "").
 		Limit(1, "").
 		Execute()
 	if err != nil {

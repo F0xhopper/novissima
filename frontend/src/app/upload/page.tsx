@@ -88,8 +88,8 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen flex justify-center items-center flex-col">
+      <div className="max-w-2xl mx-auto w-full">
         <Card>
           <CardHeader>
             <CardTitle>Upload Content</CardTitle>
