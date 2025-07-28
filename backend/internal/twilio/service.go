@@ -15,7 +15,7 @@ import (
 
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
-
+			
 type Service struct {
 	client      *Client
 	userService *users.Service
@@ -23,9 +23,10 @@ type Service struct {
 	accountSid  string
 	authToken   string
 	phoneNumber string
+	contentSid string
 }
 
-func NewService(userService *users.Service, contentService *content.Service, accountSid, authToken, phoneNumber string) *Service {
+func NewService(userService *users.Service, contentService *content.Service, accountSid, authToken, phoneNumber, contentSid string) *Service {
 	return &Service{
 		client:      NewClient(accountSid, authToken, phoneNumber),
 		userService: userService,	
@@ -33,6 +34,7 @@ func NewService(userService *users.Service, contentService *content.Service, acc
 		accountSid:  accountSid,
 		authToken:   authToken,
 		phoneNumber: phoneNumber,
+		contentSid: contentSid,
 	}
 }
 
@@ -40,12 +42,15 @@ func (s *Service) SendMessageToUser(phoneNumber, message string, mediaUrl string
 	params := &twilioApi.CreateMessageParams{}
 	params.SetTo("whatsapp:" + phoneNumber)
 	params.SetFrom("whatsapp:" + s.client.phoneNumber)
-	params.SetContentSid("HXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	fmt.Printf("contentSid: %s\n", s.contentSid)
+	params.SetContentSid(s.contentSid)
+	
+	formattedMediaUrl := strings.Split(mediaUrl, "novissima-images/")[1]
 	
 	contentVariables := map[string]string{
 		"1": message,
-		"2": mediaUrl,
-		}
+		"2": formattedMediaUrl,
+	}
 	
 	variablesJSON, _ := json.Marshal(contentVariables)
 	params.SetContentVariables(string(variablesJSON))
@@ -62,7 +67,7 @@ func (s *Service) SendMessageToUser(phoneNumber, message string, mediaUrl string
 
 func (s *Service) formatContentMessage(content *content.Content, language string) string {
 	var formattedContent string
-
+			
 	switch language {
 	case "en":
 		formattedContent = content.TextEnglish
@@ -94,6 +99,7 @@ func (s *Service) SendMessageToAllUsers(content *content.Content) error {
 		return err
 	}
 
+	failedToSend := []string{}
 	for _, user := range users {
 
 		if user.Language == "la" && content.TextLatin == nil {
@@ -104,6 +110,7 @@ func (s *Service) SendMessageToAllUsers(content *content.Content) error {
 		
 		if err := s.SendMessageToUser(user.PhoneNumber, messageToSend, *content.ImageURL); err != nil {
 			log.Printf("Error sending message to user %s: %v", user.PhoneNumber, err)
+			failedToSend = append(failedToSend, user.PhoneNumber)
 			continue
 		}
 	}
@@ -111,6 +118,10 @@ func (s *Service) SendMessageToAllUsers(content *content.Content) error {
 	err = s.contentService.UpdateLastSent(content.ID)
 	if err != nil {
 		log.Printf("Error updating last sent for content %s: %v", content.ID, err)
+	}
+	
+	if len(failedToSend) > 0 {
+		log.Printf("Failed to send daily content to %v", failedToSend)
 	}
 	
 	return nil
@@ -164,7 +175,7 @@ func (s *Service) processMessage(from, body string) string {
 	parts := strings.Fields(strings.TrimSpace(body))
 	
 	command := strings.ToLower(parts[0])
-	
+
 	switch command {
 	case "start":
 		return s.startSubscription(cleanNumber)

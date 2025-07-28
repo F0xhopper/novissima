@@ -73,6 +73,7 @@ func (s *Service) LogUserDeactivated(userID uuid.UUID) error {
 		"user_id": userID,
 	})
 }
+
 func (s *Service) LogUserActivated(userID uuid.UUID) error {
 	return s.LogEvent("user_activated", "User activated", map[string]interface{}{
 		"user_id": userID,

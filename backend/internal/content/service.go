@@ -54,6 +54,7 @@ func NewService(dbClient *supabase.Client, loggingService *logging.Service, buck
 }
 
 func (s *Service) AddContent(contentEnglish string, contentLatin string, file multipart.File, header *multipart.FileHeader, theme string, imageSource string, textSource string) (Content, error) {
+	
 	var imageURL string
 	
 	if file != nil && header != nil {

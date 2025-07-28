@@ -37,10 +37,9 @@ func (s *Service) Start() {
 		
 		err = s.twilioService.SendMessageToAllUsers(content)
 		if err != nil {
-			log.Printf("Failed to send daidly content: %v", err)
+			log.Printf("Failed to send daily content: %v", err)
 			return
 		}
-		log.Println("Daily content sent to all users successfully")
 	})
 	
 	c.Start()

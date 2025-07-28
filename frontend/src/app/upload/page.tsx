@@ -108,7 +108,6 @@ export default function UploadPage() {
                   onChange={(e) =>
                     handleInputChange("textEnglish", e.target.value)
                   }
-                  required
                 />
               </div>
 

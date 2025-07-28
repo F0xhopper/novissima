@@ -47,7 +47,6 @@ func main() {
 	if err := db.Connect(); err != nil {
 		log.Fatal(err)
 	}
-
 	
 	loggingService := logging.NewService(db.GetClient())
 	userService := users.NewService(db.GetClient(), loggingService)
@@ -62,6 +61,7 @@ func main() {
 		cfg.TwilioAccountSid,
 		cfg.TwilioAuthToken,
 		cfg.TwilioPhoneNumber,
+		cfg.TwilioContentSid,
 	)
 	schedulerService := scheduler.NewService(contentService, twilioService, loggingService)
 	

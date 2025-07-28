@@ -91,7 +91,7 @@ func (s *Service) GetAllActiveUsers() ([]User, error) {
 	if err := json.Unmarshal(data, &users); err != nil {
 		return nil, fmt.Errorf("failed to parse users data: %w", err)
 	}
-
+				
 	log.Printf("Found %d active users:", len(users))
 	for _, user := range users {
 		log.Printf("  - Phone: %s, Created: %s", user.PhoneNumber, user.CreatedAt.Format(time.RFC3339))
@@ -99,7 +99,6 @@ func (s *Service) GetAllActiveUsers() ([]User, error) {
 	
 	return users, nil
 }
-
 func (s *Service) GetUserByPhoneNumber(phoneNumber string) (User, error) {
 	var users []User
 	
