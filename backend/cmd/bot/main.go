@@ -62,6 +62,7 @@ func main() {
 		cfg.TwilioAuthToken,
 		cfg.TwilioPhoneNumber,
 		cfg.TwilioContentSid,
+		cfg.TwilioMessagingServiceSid,
 	)
 	schedulerService := scheduler.NewService(contentService, twilioService, loggingService)
 	

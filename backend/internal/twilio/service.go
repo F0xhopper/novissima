@@ -24,9 +24,10 @@ type Service struct {
 	authToken   string
 	phoneNumber string
 	contentSid string
+	messagingServiceSid string
 }
 
-func NewService(userService *users.Service, contentService *content.Service, accountSid, authToken, phoneNumber, contentSid string) *Service {
+func NewService(userService *users.Service, contentService *content.Service, accountSid, authToken, phoneNumber, contentSid, messagingServiceSid string) *Service {
 	return &Service{
 		client:      NewClient(accountSid, authToken, phoneNumber),
 		userService: userService,	
@@ -35,6 +36,7 @@ func NewService(userService *users.Service, contentService *content.Service, acc
 		authToken:   authToken,
 		phoneNumber: phoneNumber,
 		contentSid: contentSid,
+		messagingServiceSid: messagingServiceSid,
 	}
 }
 
@@ -44,6 +46,7 @@ func (s *Service) SendMessageToUser(phoneNumber, message string, mediaUrl string
 	params.SetFrom("whatsapp:" + s.client.phoneNumber)
 	fmt.Printf("contentSid: %s\n", s.contentSid)
 	params.SetContentSid(s.contentSid)
+	params.SetMessagingServiceSid(s.messagingServiceSid)
 	
 	formattedMediaUrl := strings.Split(mediaUrl, "novissima-images/")[1]
 	
@@ -335,4 +338,34 @@ func (s *Service) sendResponse(w http.ResponseWriter, message string) {
 
 	w.Header().Set("Content-Type", "application/xml")
 	w.Write([]byte(twimlResponse))
+} 
+
+func (s *Service) formatMessageForWhatsApp(content string) string {
+    // Replace markdown bold with WhatsApp bold
+    content = strings.ReplaceAll(content, "**", "*")
+    
+    // Replace markdown italic with WhatsApp italic  
+    content = strings.ReplaceAll(content, "_", "_")
+    
+    // Clean up any double formatting
+    content = strings.ReplaceAll(content, "**_", "*_")
+    content = strings.ReplaceAll(content, "_**", "_*")
+    
+    return content
+} 
+
+func (s *Service) validateWhatsAppContent(content string) error {
+    // Check for potentially problematic content
+    problematicTerms := []string{
+        "soul", "death", "corpse", "minister of God",
+        // Add more terms that might trigger filters
+    }
+    
+    for _, term := range problematicTerms {
+        if strings.Contains(strings.ToLower(content), term) {
+            return fmt.Errorf("content contains potentially problematic term: %s", term)
+        }
+    }
+    
+    return nil
 } 

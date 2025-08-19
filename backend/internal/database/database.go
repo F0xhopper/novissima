@@ -12,18 +12,18 @@ type Database interface {
 }
 
 type SupabaseDB struct {
-	url     string
-	key     string
-	email   string
+	url      string
+	key      string
+	email    string
 	password string
-	client  *supabase.Client
+	client   *supabase.Client
 }
 
 func NewSupabaseDB(url, key, email, password string) *SupabaseDB {
 	return &SupabaseDB{
-		url: url,
-		key: key,
-		email: email,
+		url:      url,
+		key:      key,
+		email:    email,
 		password: password,
 	}
 }
@@ -49,4 +49,5 @@ func (db *SupabaseDB) Connect() error {
 
 func (db *SupabaseDB) GetClient() *supabase.Client {
 	return db.client
-} 
+}
+
